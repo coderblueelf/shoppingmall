@@ -1,7 +1,11 @@
 <template>
   <div id="app">
-    <router-view></router-view>
-    <main-tab-bar></main-tab-bar>
+    <router-view v-slot="{ Component }">
+      <keep-alive exclude="Detail">
+        <component :is="Component" />
+      </keep-alive>
+    </router-view>
+    <main-tab-bar class="main-tabbar"></main-tab-bar>
   </div>
 </template>
 
@@ -17,4 +21,8 @@
 
 <style>
   @import "./assets/css/base.css";
+  .main-tabbar {
+    position: absolute;
+    z-index: 9;
+  }
 </style>
