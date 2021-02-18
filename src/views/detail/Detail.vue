@@ -6,11 +6,6 @@
     ref="scroll"
     @scroll="contentScroll"
     :probe-type="3">
-    <ul>
-      <li v-for="item in $store.state.cartList">
-        {{item}}
-      </li>
-    </ul>
       <detail-swiper :top-images="topImages"></detail-swiper>
       <detail-base-info :goods="goods"></detail-base-info>
       <detail-shop-info :shop="shop"></detail-shop-info>
@@ -21,6 +16,7 @@
     </scroll>
     <detail-bottom-bar @addToCart="addToShoppingCart"></detail-bottom-bar>
     <back-top @click="backTopClick" v-show="isShowBackTop"></back-top>
+    <toast :message="message" :isShow="isShow"></toast>
   </div>
 </template>
 
@@ -37,9 +33,12 @@
   import Scroll from 'components/common/scroll/Scroll'
   import GoodsList from 'components/content/goods/GoodsList'
   import BackTop from 'components/content/backtop/BackTop'
+  import Toast from 'components/common/toast/Toast'
+
 
   import { getDetail, Goods, Shop, GoodsParam, getRecommend} from 'network/detail'
   import { debounce } from '@/common/utils'
+  import { mapActions } from 'vuex'
 
 
   export default {
@@ -55,7 +54,8 @@
     DetailCommentInfo,
     GoodsList,
     DetailBottomBar,
-    BackTop
+    BackTop,
+    Toast
   },
   data () {
     return {
@@ -71,6 +71,8 @@
       getThemeTopY: null,
       currentIndex: 0,
       isShowBackTop: false,
+      message: '',
+      isShow: false
     }
   },
   created() {
@@ -112,7 +114,7 @@
         this.themeTopY.push(this.$refs.comment.$el.offsetTop - 44)
         this.themeTopY.push(this.$refs.recommend.$el.offsetTop - 44)
         this.themeTopY.push(Number.MAX_VALUE)
-        console.log(this.themeTopY)
+        //console.log(this.themeTopY)
       })
       }
 
@@ -133,6 +135,7 @@
   updated() {
   },
   methods: {
+    ...mapActions(['addToCart']),
     detailImageLoad() {
       this.$refs.scroll.scroll.refresh()
 
@@ -148,7 +151,12 @@
 
       let length = this.themeTopY.length
       for (let i = 0; i < length-1; i++) {
-        if(this.currentIndex !== i && (positionY >= this.themeTopY[i] && positionY < this.themeTopY[i+1])){
+        // if(this.currentIndex !== i && ((i < length - 1 && positionY >= this.themeTopY[i] && positionY < this.themeTopY[i + 1]) 
+        // || (i === length - 1 && positionY >= this.themeTopY[i]))){
+        //   this.currentIndex = i;
+        //   this.$refs.nav.currentIndex = this.currentIndex
+        // }
+        if(this.currentIndex !== i && (positionY >= this.themeTopY[i] && positionY < this.themeTopY[i+1])) {
           this.currentIndex = i;
           this.$refs.nav.currentIndex = this.currentIndex
         }
@@ -169,7 +177,16 @@
       product.price = this.goods.realPrice;
       product.iid = this.iid
 
-      this.$store.dispatch('addToShoppingCart', product)
+      this.addToCart(product).then(res => {
+        console.log('------')
+        this.isShow = true;
+        this.message = res
+
+        setTimeout(() => {
+          this.isShow = false;
+          this.message = ''
+        },2000)
+      })
     }
   }
 }
